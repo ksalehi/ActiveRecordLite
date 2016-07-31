@@ -3,18 +3,22 @@ require_relative '01_sql_object'
 
 module Searchable
   def where(params)
-    where_line = (["?"] * params.length).join(", ")
-    params.each do |param|
-
-    end 
-    DBConnection.execute(<<-SQL, *params)
+    question_marks = (["?"] * params.length).join(", ")
+    where_line = params.map do |key, val|
+      "#{key} = ? "
+    end
+    where_line = where_line.join("AND ")
+    search = DBConnection.execute(<<-SQL, *params.values)
       SELECT
         *
       FROM
         #{self.table_name}
       WHERE
-        ?
+        #{where_line}
     SQL
+    search.map do |item|
+      self.new(item)
+    end
   end
 end
 
